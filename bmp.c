@@ -143,6 +143,17 @@ void dct(double data[8][8],
 		data[1][i]=(double)((x2+x5+16384)>>13);
 		data[3][i]=(double)(((x3>>8)*r2+8192)>>12);
 		data[5][i]=(double)(((x0>>8)*r2+8192)>>12);
+		
+		
+		matrix[0][i]=data[0][i];
+		matrix[4][i]=data[4][i];
+		matrix[2][i]=data[2][i];
+		matrix[6][i]=data[6][i];
+		matrix[7][i]=data[7][i];
+		matrix[1][i]=data[1][i];
+		matrix[3][i]=data[3][i];
+		matrix[5][i]=data[5][i];
+
 	}
 }
 
@@ -257,7 +268,7 @@ int main() {
 		if((i!=0)&&(i%128)==0)
 		{
 			j++;
-			printf("\n");
+			
 		}
 		matrix[j][i%128]=data[i];
 		//printf("matrix : %d\n",img[j][i%128]);
@@ -279,10 +290,11 @@ int main() {
 			
 			char ch[3];
 			int myInt = matrix[i][j];
-			sprintf(ch,"%d",myInt);
+			sprintf(ch,"%3d",myInt);
 			fwrite(ch,sizeof(ch),1,outfile);
+			
+			printf("%s ",ch);
 			fwrite(space,1,1,outfile);
-			printf("%3s ",ch);
 			
 			
 		}
