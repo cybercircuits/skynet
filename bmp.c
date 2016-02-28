@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-
+int matrix[128][128];
 
 #ifndef PI
  #ifdef M_PI
@@ -17,7 +17,7 @@
 
 //DCT Starts here
 
-void dct(int matrix[128][128], double data[8][8],
+void dct(double data[8][8],
 	const int xpos, const int ypos)
 {
 	int i;
@@ -158,7 +158,7 @@ void quantize(double dct_buf[8][8])
 		for (x=0; x<8; x++)
 		{
 			if (x > 3 || y > 3) dct_buf[y][x] = 0.0;
-			printf("%2.1f ",dct_buf[y][x]);
+			
 		}
 		
 	}
@@ -171,8 +171,42 @@ void quantize(double dct_buf[8][8])
 	if (u == 0) Cu = 1.0 / sqrt(2.0); else Cu = 1.0; \
 	if (v == 0) Cv = 1.0 / sqrt(2.0); else Cv = 1.0; \
 	}
+void idct(double data[8][8], const int xpos, const int ypos)
+{
+	int u,v,x,y;
 
-int dodct(int matrix[128][128])
+	/* iDCT */
+	for (y=0; y<8; y++)
+	for (x=0; x<8; x++)
+	{
+		double z = 0.0;
+
+		for (v=0; v<8; v++)
+		for (u=0; u<8; u++)
+		{
+			double S, q;
+			double Cu, Cv;
+			
+			COEFFS(Cu,Cv,u,v);
+			S = data[v][u];
+
+			q = Cu * Cv * S *
+				cos((double)(2*x+1) * (double)u * PI/16.0) *
+				cos((double)(2*y+1) * (double)v * PI/16.0);
+
+			z += q;
+		}
+
+		z /= 4.0;
+		if (z > 255.0) z = 255.0;
+		if (z < 0) z = 0.0;
+
+		matrix[x+xpos][y+ypos] = (int) z;
+		//printf("%d ",matrix[x+xpos][y+ypos]);
+	}
+}
+
+int dodct()
 {
 	
 
@@ -184,8 +218,10 @@ int dodct(int matrix[128][128])
 	{
 		for (i=0; i<128/8; i++)
 		{
-			dct(matrix, dct_buf1, i*8, j*8);
+			dct(dct_buf1, i*8, j*8);
 			quantize(dct_buf1);
+			idct(dct_buf1, i*8, j*8);
+			
 			//printf("processed %d/%d blocks.\r", ++k,l);
 			fflush(stdout);
 			printf("\n");
@@ -201,6 +237,7 @@ int dodct(int matrix[128][128])
 int main() {
  
     char *filename="/home/dhyandeepak/Desktop/final.bmp";
+    char *outputname="/home/dhyandeepak/Desktop/out.pgm";
 	FILE *f = fopen(filename, "rb");
 	unsigned char info1[56];
 	fread(info1,1,56,f); // read the 54-byte headr
@@ -210,7 +247,7 @@ int main() {
 	int offset=*(int*)&info1[10];
 	int size = width1 * height1;
 	unsigned char data[16384],rmng[2000];
-	int img[128][128];
+	
 	fread(rmng,1,offset-56,f);
 	fread(data,1,size,f);
 	
@@ -222,12 +259,40 @@ int main() {
 			j++;
 			printf("\n");
 		}
-		img[j][i%128]=data[i];
+		matrix[j][i%128]=data[i];
 		//printf("matrix : %d\n",img[j][i%128]);
 	}
 	//printf("data : %d\n",data[i+1]);
 	//printf("offset : %d\n",offset);
-	dodct(img);
+
+	dodct();
+	FILE *outfile= fopen(outputname, "a+");
+	 char *header="P2\n128 128\n255\n";
+	 fwrite(header,1,15,outfile);
+	for(i=0;i<128;i++)
+	{
+		for(j=0;j<128;j++)
+		{
+			//printf("%d ",matrix[i][j]);
+			
+			char* space=" ";
+			
+			char ch[3];
+			int myInt = matrix[i][j];
+			sprintf(ch,"%d",myInt);
+			fwrite(ch,sizeof(ch),1,outfile);
+			fwrite(space,1,1,outfile);
+			printf("%3s ",ch);
+			
+			
+		}
+		char* nline="\n";
+		fwrite(nline,1,1,outfile);
+		printf("\n");
+
+	}
+	fclose(f);
+	fclose(outfile);
     return 0;   
 }
 
