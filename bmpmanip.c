@@ -65,8 +65,4 @@ void filewrite()
 	}
 	fclose(outfile);
 }
-void main()
-{
-	int*b=filehand();
-	filewrite();
-}
+
