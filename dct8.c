@@ -125,6 +125,37 @@ void init_dct(void)
             dct_trp_matrix[i*N + j] = dct_matrix[j*N + i];
 }
 
+static void dct_1d_ref(float *dst, const float *src,
+                       int stridea, int strideb,
+                       const float *matrix)
+{
+    int x;
+    for (x = 0; x < N; x++) {
+        int i, j;
+        for (j = 0; j < N; j++) {
+            float sum = 0.;
+            for (i = 0; i < N; i++)
+                sum += matrix[j*N + i] * src[i*stridea];
+            dst[j*stridea] = sum;
+        }
+        dst += strideb;
+        src += strideb;
+    }
+}
+
+static void fdct_ref(float *dst, const float *src)
+{
+    float tmp[N*N];
+    dct_1d_ref(tmp, src, 1, N, dct_matrix);
+    dct_1d_ref(dst, tmp, N, 1, dct_matrix);
+}
+
+static void idct_ref(float *dst, const float *src)
+{
+    float tmp[N*N];
+    dct_1d_ref(tmp, src, 1, N, dct_trp_matrix);
+    dct_1d_ref(dst, tmp, N, 1, dct_trp_matrix);
+}
 
 /********** test **************************/
 
@@ -168,28 +199,23 @@ int main()
 			}
 			printf("\n");
 			
-			fdct(out_fdct, src);//find fast dct for each 8X8 blocks
-			idct(out_idct, out_fdct);
-			for(p=0;p<64;p++)
+			fdct_ref(out_fdct, src);//find fast dct for each 8X8 blocks
+			idct_ref(out_idct, out_fdct);
+			for(k=0;k<8;k++)
 			{
-				results[res+p]=out_idct[p];
+				for(l=0;l<8;l++)
+				{
+					matrix[8*j+k][l+8*i]=out_idct[l+8*k];//store 8X8 image block into an array
+					//printf("%f ",src[l+8*k]);
+				}
+				//printf("\n");
 			}
-			res=res+64;
 	   }
 	   
    }
     
 
-p=0;
-   for(j=0;j<128;j++)
-   {
-	   for(i=0;i<128;i++)
-	   {
-		   if(results[j*128+i]<3)
-		  results[j*128+i]=0;
-		   matrix[i][j]=results[i*128+j];
-	   }
-   }
+
     filewrite();
 
     return 0;
