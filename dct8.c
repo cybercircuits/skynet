@@ -152,8 +152,8 @@ int main()
 	int *m=filehand();
 	
 	int l=0,j,k,res=0,p;
-	
-   for(j=0;j<128/8;j++)
+	init_dct();
+   for(j=0;j<128/8;j++)//error here
    {
 	   for(i=0;i<128/8;i++)
 	   {
@@ -161,10 +161,13 @@ int main()
 			{
 				for(l=0;l<8;l++)
 				{
-					src[l+8*k]=matrix[k+j][l+i];//store 8X8 image block into an array
+					src[l+8*k]=matrix[8*j+k][l+8*i];//store 8X8 image block into an array
+					printf("%f ",src[l+8*k]);
 				}
+				printf("\n");
 			}
-			init_dct();
+			printf("\n");
+			
 			fdct(out_fdct, src);//find fast dct for each 8X8 blocks
 			idct(out_idct, out_fdct);
 			for(p=0;p<64;p++)
@@ -182,9 +185,9 @@ p=0;
    {
 	   for(i=0;i<128;i++)
 	   {
-		   //if(results[j*128+i]<3)
-		  // results[j*128+i]=0;
-		   matrix[j][i]=results[j*128+i];
+		   if(results[j*128+i]<3)
+		  results[j*128+i]=0;
+		   matrix[i][j]=results[i*128+j];
 	   }
    }
     filewrite();
