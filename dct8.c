@@ -2,9 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "/home/dhyandeepak/Desktop/fft/bmpmanip.h"
-/********* generated code snippet *********/
-
 #define N 8
+#define LENGTH 128
 
 static inline void fdct_1d(float *dst, const float *src,
                            int dst_stridea, int dst_strideb,
@@ -102,7 +101,7 @@ static void idct(float *dst, const float *src)
 }
 
 
-/********* slow reference dct code ********/
+//slow reference dct code 
 
 static float dct_matrix    [N*N];
 static float dct_trp_matrix[N*N];
@@ -157,36 +156,21 @@ static void idct_ref(float *dst, const float *src)
     dct_1d_ref(dst, tmp, N, 1, dct_trp_matrix);
 }
 
-/********** test **************************/
 
-static int check_output(const char *name, const float *ref, const float *out)
-{
-    int i, ret = 0;
-
-    for (i = 0; i < N*N; i++) {
-        const int ok = fabs(ref[i] - out[i]) < 0.0005;
-        if (!ok) {
-            printf("%s ref:%9.3f out:%9.3f diff:%9.3f\n",
-                   name, ref[i], out[i], ref[i] - out[i]);
-            ret = -1;
-        }
-    }
-    return ret;
-}
 
 int main()
 {
     int i;
     float src[N*N];
 	
-    float out_fdct[N*N], out_idct[N*N],results[128*128];
+    float out_fdct[N*N], out_idct[N*N],results[LENGTH*LENGTH];
 	int *m=filehand();
 	
 	int l=0,j,k,res=0,p;
 	init_dct();
-   for(j=0;j<128/8;j++)//error here
+   for(j=0;j<LENGTH/8;j++)
    {
-	   for(i=0;i<128/8;i++)
+	   for(i=0;i<LENGTH/8;i++)
 	   {
 		   for(k=0;k<8;k++)
 			{
@@ -205,7 +189,9 @@ int main()
 			{
 				for(l=0;l<8;l++)
 				{
-					matrix[8*j+k][l+8*i]=out_idct[l+8*k];//store 8X8 image block into an array
+					//if(out_fdct[l+8*k]<0)
+					//out_fdct[l+8*k]=0;
+					matrix[8*j+k][l+8*i]=out_idct[l+8*k];//store 8X8  block's compressed values into the matrix itself
 					//printf("%f ",src[l+8*k]);
 				}
 				//printf("\n");
