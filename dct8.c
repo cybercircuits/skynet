@@ -1,7 +1,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "/home/dhyandeepak/Desktop/fft/bmpmanip.h"
+#include "bmpmanip.h"
 #define N 8
 #define LENGTH 128
 
@@ -160,49 +160,79 @@ static void idct_ref(float *dst, const float *src)
 
 int main()
 {
-    int i;
-    float src[N*N];
+    int i,j;
+    
+    float src1[N*N],src2[N*N];
 	
-    float out_fdct[N*N], out_idct[N*N],results[LENGTH*LENGTH];
-	int *m=filehand();
-	
-	int l=0,j,k,res=0,p;
-	init_dct();
-   for(j=0;j<LENGTH/8;j++)
-   {
-	   for(i=0;i<LENGTH/8;i++)
-	   {
-		   for(k=0;k<8;k++)
+    float out_fdct1[N*N],out_fdct2[N*N], out_idct[N*N];
+	int *matrix1=filehand("/home/dhyandeepak/Desktop/input1.bmp");
+	int in1[128][128],in2[128][128];
+	for(i=0;i<LENGTH;i++)
+	{
+			
+			for(j=0;j<LENGTH;j++)
 			{
-				for(l=0;l<8;l++)
+				
+				in1[i][j]=mat[i][j];//store the returned matrix in in1
+				printf("matrix %d",in1[i][j]);
+			}
+				
+	}
+	int *matrix2=filehand("/home/dhyandeepak/Desktop/input2.bmp");
+	for(i=0;i<LENGTH;i++)
+	{
+			
+			for(j=0;j<LENGTH;j++)
+			{
+					
+				in2[i][j]=(mat[i][j]);//store the returned matrix in in2
+			}
+				
+	}
+
+	
+	int l=0,k,res=0,p;
+	init_dct();
+	for(j=0;j<LENGTH/N;j++)
+	{
+	   for(i=0;i<LENGTH/N;i++)
+	   {
+			for(k=0;k<N;k++)
+			{
+				for(l=0;l<N;l++)
 				{
-					src[l+8*k]=matrix[8*j+k][l+8*i];//store 8X8 image block into an array
-					printf("%f ",src[l+8*k]);
+					src1[l+N*k]=in1[(N*j+k)][(l+N*i)];//store 8X8 image block into an array
+					src2[l+N*k]=in2[(N*j+k)][(l+N*i)];
+					printf("src:%f ",src1[l+N*k]);
 				}
 				printf("\n");
 			}
 			printf("\n");
 			
-			fdct_ref(out_fdct, src);//find fast dct for each 8X8 blocks
-			idct_ref(out_idct, out_fdct);
-			for(k=0;k<8;k++)
+			fdct_ref(out_fdct1, src1);//find fast dct for each 8X8 blocks
+			fdct_ref(out_fdct2, src2);
+			int med;
+			for(med=0;med<64;med++)
 			{
-				for(l=0;l<8;l++)
+				out_fdct1[med]=(out_fdct1[med]+out_fdct2[med])/2;
+			}
+			
+			idct_ref(out_idct, out_fdct1);
+			for(k=0;k<N;k++)
+			{
+			
+				for(l=0;l<N;l++)
 				{
-					//if(out_fdct[l+8*k]<0)
-					//out_fdct[l+8*k]=0;
-					matrix[8*j+k][l+8*i]=out_idct[l+8*k];//store 8X8  block's compressed values into the matrix itself
-					//printf("%f ",src[l+8*k]);
+					
+					mat[(N*j+k)][(l+N*i)]=out_idct[l+N*k];//store 8X8  block's compressed values into the matrix itself
 				}
-				//printf("\n");
+				
 			}
 	   }
 	   
-   }
+	}
+    filewrite("/home/dhyandeepak/Desktop/out.pgm");//write the matrix into file
     
-
-
-    filewrite();
-
     return 0;
 }
+
